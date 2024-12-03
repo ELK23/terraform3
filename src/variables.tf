@@ -30,3 +30,46 @@ variable "vpc_name" {
   default     = "develop"
   description = "VPC network&subnet name"
 }
+
+
+variable "web_vms" {
+  default = [
+    {
+      name        = "web-1"
+      external_ip = "10.0.1.1"
+      fqdn        = "web1.ru-central1.internal"
+    },
+    {
+      name        = "web-2"
+      external_ip = "10.0.1.2"
+      fqdn        = "web2.ru-central1.internal"
+    }
+  ]
+}
+
+variable "db_vms" {
+  default = [
+    {
+      name        = "main"
+      external_ip = "10.0.1.3"
+      fqdn        = "main.db.ru-central1.internal"
+    },
+    {
+      name        = "replica"
+      external_ip = "10.0.1.4"
+      fqdn        = "replica.db.ru-central1.internal"
+    }
+  ]
+}
+
+variable "storage_vms" {
+  default = [
+    {
+      name        = "storage"
+      external_ip = "10.0.1.5"
+      fqdn        = "storage.ru-central1.internal"
+    }
+  ]
+}
+
+
