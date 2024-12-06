@@ -2,14 +2,14 @@ resource "yandex_compute_instance" "web" {
   count = 2
 
   name        = "web-${count.index + 1}"
-  platform_id = "standard-v1"
+  platform_id = var.template_vm.platform_id
   zone        = var.default_zone
 
   boot_disk {
     initialize_params {
-      image_id = "fd8chrq89mmk8tqm85r8"
-      size     = 30
-      type     = "network-hdd"
+      image_id = var.template_vm.boot_disk.image
+      size     = var.template_vm.boot_disk.size
+      type     = var.template_vm.boot_disk.type
     }
   }
 
@@ -17,15 +17,15 @@ resource "yandex_compute_instance" "web" {
     subnet_id = yandex_vpc_subnet.develop.id
     nat       = true
 
-    security_group_ids = ["enppnvqd1388ibcdil9p"]
+    security_group_ids = var.security_group_id
   }
 
   resources {
-    memory = 2
-    cores  = 2
+    memory = var.template_vm.memory
+    cores  = var.template_vm.cores
   }
 
   metadata = {
-    ssh-keys = file("~/yan.pub")
+    ssh-keys = var.ssh_key_path
   }
 }

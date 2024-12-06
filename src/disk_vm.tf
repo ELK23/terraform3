@@ -1,38 +1,38 @@
 resource "yandex_compute_disk" "storage_disk" {
-  count = 3
+  count = var.storage_disk_count
 
   name = "storage-disk-${count.index + 1}"
-  size = 1
-  type = "network-hdd"
+  size = var.storage_disk_size
+  type = var.storage_disk_type
   zone = var.default_zone
 }
 
 resource "yandex_compute_instance" "storage" {
-  name        = "storage"
-  platform_id = "standard-v1"
+  name        = var.storage_vm.name
+  platform_id = var.storage_vm.platform_id
   zone        = var.default_zone
 
   boot_disk {
     initialize_params {
-      image_id = "fd8chrq89mmk8tqm85r8"
-      size     = 20 
-      type     = "network-hdd"
+      image_id = var.storage_vm.boot_disk.image
+      size     = var.storage_vm.boot_disk.size
+      type     = var.storage_vm.boot_disk.type
     }
   }
 
   network_interface {
     subnet_id = yandex_vpc_subnet.develop.id
     nat       = true
-    security_group_ids = ["enppnvqd1388ibcdil9p"]
+    security_group_ids = var.security_group_id
   }
 
   resources {
-    memory = 2
-    cores  = 2
+    memory = var.storage_vm.memory
+    cores  = var.storage_vm.cores
   }
 
   metadata = {
-    ssh-keys = file("~/yan.pub")
+    ssh-keys = var.ssh_key_path
   }
 
   dynamic "secondary_disk" {

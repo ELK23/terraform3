@@ -1,39 +1,34 @@
-# for_each-vm.tf
-variable "each_vm" {
-  type = list(object({
-    vm_name    = string
-    cpu        = number
-    ram        = number
-    disk_volume = number
-  }))
-  default = [
+locals {
+  db_defaults = [
     {
       vm_name    = "main"
-      cpu        = 2
-      ram        = 4
-      disk_volume = 20
+      cpu        = var.template_vm.memory
+      ram        = var.template_vm.cores
+      disk_volume = var.template_vm.boot_disk.size
     },
     {
       vm_name    = "replica"
-      cpu        = 2
-      ram        = 2
-      disk_volume = 21
+      cpu        = var.template_vm.memory
+      ram        = var.template_vm.cores
+      disk_volume = var.template_vm.boot_disk.size
     }
   ]
 }
 
+
+
 resource "yandex_compute_instance" "db" {
-  for_each = { for v in var.each_vm : v.vm_name => v }
+  for_each = { for v in local.db_defaults : v.vm_name => v }
 
   name        = each.value.vm_name
-  platform_id = "standard-v1"
+  platform_id = var.template_vm.platform_id
   zone        = var.default_zone
 
   boot_disk {
     initialize_params {
-      image_id = "fd8chrq89mmk8tqm85r8"
+      image_id = var.template_vm.boot_disk.image
       size     = each.value.disk_volume
-      type     = "network-hdd"
+      type     = var.template_vm.boot_disk.type
     }
   }
 
@@ -41,7 +36,7 @@ resource "yandex_compute_instance" "db" {
     subnet_id = yandex_vpc_subnet.develop.id
     nat       = true
 
-    security_group_ids = ["enppnvqd1388ibcdil9p"]
+    security_group_ids = var.security_group_id
   }
 
   resources {
@@ -50,6 +45,6 @@ resource "yandex_compute_instance" "db" {
   }
 
   metadata = {
-    ssh-keys = file("~/yan.pub")
+    ssh-keys = var.ssh_key_path
   }
 }

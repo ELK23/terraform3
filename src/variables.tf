@@ -31,17 +31,99 @@ variable "vpc_name" {
   description = "VPC network&subnet name"
 }
 
+variable "security_group_id" {
+  type        = list
+  default     = ["enppnvqd1388ibcdil9p"]
+  description = "Security group ID for the instance"
+}
+
+variable "storage_disk_size" {
+  type        = number
+  default     = 1
+  description = "Size of each storage disk in GB"
+}
+variable "storage_disk_count" {
+  type        = number
+  default     = 3
+  description = "Number of additional storage devices"
+}
+
+variable "storage_disk_type" {
+  type        = string
+  default     = "network-hdd"
+  description = "Type of additional storage disks"
+}
+
+variable "storage_vm" {
+  type = object({
+    name        = string
+    platform_id = string
+    memory      = number
+    cores       = number
+    boot_disk = object({
+      size  = number
+      type  = string
+      image = string
+    })
+  })
+  default = {
+    name        = "storage"
+    platform_id = "standard-v1"
+    memory      = 2
+    cores       = 2
+    boot_disk = {
+      size  = 20
+      type  = "network-hdd"
+      image = "fd8chrq89mmk8tqm85r8"
+    }
+  }
+}
+
+
+variable "template_vm" {
+  type = object({
+    name        = string
+    platform_id = string
+    memory      = number
+    cores       = number
+    boot_disk = object({
+      size  = number
+      type  = string
+      image = string
+    })
+  })
+  default = {
+    name        = "storage"
+    platform_id = "standard-v1"
+    memory      = 2
+    cores       = 2
+    boot_disk = {
+      size  = 20
+      type  = "network-hdd"
+      image = "fd8chrq89mmk8tqm85r8"
+    }
+  }
+}
+
+
+
+variable "ssh_key_path" {
+  type        = string
+  default     = "~/yan.pub"
+  description = "Path to the SSH public key"
+}
+
+
+
 
 variable "web_vms" {
   default = [
     {
       name        = "web-1"
-      external_ip = "10.0.1.1"
       fqdn        = "web1.ru-central1.internal"
     },
     {
       name        = "web-2"
-      external_ip = "10.0.1.2"
       fqdn        = "web2.ru-central1.internal"
     }
   ]
@@ -51,25 +133,51 @@ variable "db_vms" {
   default = [
     {
       name        = "main"
-      external_ip = "10.0.1.3"
       fqdn        = "main.db.ru-central1.internal"
     },
     {
       name        = "replica"
-      external_ip = "10.0.1.4"
       fqdn        = "replica.db.ru-central1.internal"
     }
   ]
 }
-
 variable "storage_vms" {
   default = [
     {
       name        = "storage"
-      external_ip = "10.0.1.5"
       fqdn        = "storage.ru-central1.internal"
     }
   ]
 }
 
 
+
+variable "base_ips" {
+  type = map(string)
+  default = {
+    web     = "10.0.1.1/24"
+    db      = "10.0.1.3/24"
+    storage = "10.0.1.5/24"
+  }
+}
+
+
+locals {
+  web_vms = [
+    for idx, vm in var.web_vms : merge(vm, {
+      external_ip = cidrhost(var.base_ips["web"], idx + 1)
+    })
+  ]
+
+  db_vms = [
+    for idx, vm in var.db_vms : merge(vm, {
+      external_ip = cidrhost(var.base_ips["db"], idx + 1)
+    })
+  ]
+
+  storage_vms = [
+    for idx, vm in var.storage_vms : merge(vm, {
+      external_ip = cidrhost(var.base_ips["storage"], idx + 1)
+    })
+  ]
+}
