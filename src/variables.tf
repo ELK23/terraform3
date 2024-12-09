@@ -155,14 +155,14 @@ variable "storage_vms" {
 variable "base_ips" {
   type = map(string)
   default = {
-    web     = "10.0.1.1/24"
-    db      = "10.0.1.3/24"
-    storage = "10.0.1.5/24"
+    web     = "10.0.1.2/24"
   }
 }
 
 
 locals {
+  db_base_ip = format("%s/24", cidrhost(var.base_ips["web"], 10))
+  storage_base_ip = format("%s/24", cidrhost(var.base_ips["web"], 20)) 
   web_vms = [
     for idx, vm in var.web_vms : merge(vm, {
       external_ip = cidrhost(var.base_ips["web"], idx + 1)
@@ -171,13 +171,13 @@ locals {
 
   db_vms = [
     for idx, vm in var.db_vms : merge(vm, {
-      external_ip = cidrhost(var.base_ips["db"], idx + 1)
+      external_ip = cidrhost(local.db_base_ip, idx + 1)
     })
   ]
 
   storage_vms = [
     for idx, vm in var.storage_vms : merge(vm, {
-      external_ip = cidrhost(var.base_ips["storage"], idx + 1)
+      external_ip = cidrhost(local.storage_base_ip, idx + 1)
     })
   ]
 }
